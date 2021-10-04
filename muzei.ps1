@@ -1,14 +1,6 @@
-$response = Invoke-RestMethod "https://muzei.co/featured?callback=withfeatured" -Method GET
+$response = Invoke-RestMethod "https://muzei.co/featured" -Method GET
 
-$regx = [regex] "\{([^)]+)\}"
-
-$match = $regx.Match($response)
-
-$value = $match.Value
-
-$value = $value | ConvertFrom-Json
-
-Invoke-RestMethod $value.imageUri -Method GET -OutFile featured.jpg
+Invoke-RestMethod $response.imageUri -Method GET -OutFile featured.jpg
 
 $setwallpapersrc = @"
 using System.Runtime.InteropServices;
@@ -31,3 +23,6 @@ Add-Type -TypeDefinition $setwallpapersrc
 $localPath = Get-Location
 
 [wallpaper]::SetWallpaper( (Join-Path $localPath "featured.jpg") ) 
+
+$Shell = New-Object -ComObject "WScript.Shell"
+$Button = $Shell.Popup($response.title + ", by " + $response.byline, 0, "Today's artwork", 0)
