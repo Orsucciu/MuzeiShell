@@ -1,7 +1,22 @@
+#The API call
 $response = Invoke-RestMethod "https://muzei.co/featured" -Method GET
 
-Invoke-RestMethod $response.imageUri -Method GET -OutFile featured.jpg
+#creates the archive folder if it doesn't already exists
+if (!(Test-Path $scriptLocation\archive)) {
+    New-Item -ItemType Directory -Path $scriptLocation\Archive
+}
 
+#The image fetched, that we save as featured.jpg. The file is saved inside the script folder
+$scriptLocation = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath('.\')
+Invoke-RestMethod $response.imageUri -Method GET -OutFile $scriptLocation\featured.jpg
+#we prepare the correct filename
+$artworkName = $response.title
+$author = $response.byline
+$fullName = ($artworkName + ", by " + $author + ".jpg")
+#we copy what we just downloaded to the archive folder.
+Copy-Item $scriptLocation\featured.jpg -Destination $scriptLocation\Archive\$fullName
+
+#changes the walllpaper. Look it up, i didn't write this
 $setwallpapersrc = @"
 using System.Runtime.InteropServices;
 public class wallpaper
@@ -18,11 +33,26 @@ SystemParametersInfo( SetDesktopWallpaper, 0, path, UpdateIniFile | SendWinIniCh
 }
 "@
 
+$showImage = @"
+[System.Windows.Forms.Application]::EnableVisualStyles();
+$form = new-object Windows.Forms.Form
+$form.Text = "Image Viewer"
+$form.Width = $img.Size.Width;
+$form.Height =  $img.Size.Height;
+$pictureBox = new-object Windows.Forms.PictureBox
+$pictureBox.Width =  $img.Size.Width;
+$pictureBox.Height =  $img.Size.Height;
+
+$pictureBox.Image = $img;
+$form.controls.add($pictureBox)
+$form.Add_Shown( { $form.Activate() } )
+$form.ShowDialog()
+"@
+
 Add-Type -TypeDefinition $setwallpapersrc
 
-$localPath = Get-Location
+[wallpaper]::SetWallpaper( (Join-Path $scriptLocation "featured.jpg") ) 
 
-[wallpaper]::SetWallpaper( (Join-Path $localPath "featured.jpg") ) 
-
+#creates the little box with the image's info
 $Shell = New-Object -ComObject "WScript.Shell"
-$Button = $Shell.Popup($response.title + ", by " + $response.byline, 0, "Today's artwork", 0)
+$Button = $Shell.Popup($artworkName + ", by " + $author, 0, "Today's artwork", 0)
