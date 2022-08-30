@@ -33,26 +33,10 @@ SystemParametersInfo( SetDesktopWallpaper, 0, path, UpdateIniFile | SendWinIniCh
 }
 "@
 
-$showImage = @"
-[System.Windows.Forms.Application]::EnableVisualStyles();
-$form = new-object Windows.Forms.Form
-$form.Text = "Image Viewer"
-$form.Width = $img.Size.Width;
-$form.Height =  $img.Size.Height;
-$pictureBox = new-object Windows.Forms.PictureBox
-$pictureBox.Width =  $img.Size.Width;
-$pictureBox.Height =  $img.Size.Height;
-
-$pictureBox.Image = $img;
-$form.controls.add($pictureBox)
-$form.Add_Shown( { $form.Activate() } )
-$form.ShowDialog()
-"@
-
 Add-Type -TypeDefinition $setwallpapersrc
 
 [wallpaper]::SetWallpaper( (Join-Path $scriptLocation "featured.jpg") ) 
 
 #creates the little box with the image's info
 $Shell = New-Object -ComObject "WScript.Shell"
-$Button = $Shell.Popup($artworkName + ", by " + $author, 0, "Today's artwork", 0)
+$Shell.Popup($artworkName + ", by " + $author, 0, "Today's artwork", 0)
