@@ -2,7 +2,6 @@ Muzei Shell - The Desktop version of *Muzei*
 
 This is a sort of little journal, log for this project.
 
-
 This was actually written last year, and i only wrote this document now.
 
 Basically, Muzei is an Android App that lets you discover art by getting your lockscreen and wallpaper replaced by a random artwork everyday. The project is hosted here (https://muzei.co/). Seemingly funded by a google employee, i do not know how it is or isn't curated.
@@ -18,3 +17,5 @@ Here are some ideas for improvements, in no particular order, along with their s
 2 - Upscale the artwork if it is blury
 
 3 - Show a little museum-style card in the bottom-right corner, with a link to the wikiart entry
+
+4 - Update the archive files' metadata WITH NO external dependencies
