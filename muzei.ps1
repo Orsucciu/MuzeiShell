@@ -1,7 +1,30 @@
+#This script pulls the daily painting from the Muzei front page.
+#It is a simple powershell script.
+#This version is meant for new users
+#The script will create a "MuzeiShell" folder in your documents, move itself there, and create a scheduled task to run itself every day at 9am.
+#When it runs itself, the script calls the image, saves it with its name in a "Archive" folder, save the metadata to a db.json file, and sets the wallpaper to the image.
+
+#creates the MuzeiShell folder in your documents, if it doesn't already exists
+if (!(Test-Path $env:USERPROFILE\Documents\MuzeiShell)) {
+    New-Item -ItemType Directory -Path $env:USERPROFILE\Documents\MuzeiShell
+}
+
+#moves the script to the MuzeiShell folder. Otherwise it does everything from where it is standing
+if (!(Test-Path $env:USERPROFILE\Documents\MuzeiShell\muzei.ps1)) {
+    Move-Item -Path $MyInvocation.MyCommand.Path -Destination $env:USERPROFILE\Documents\MuzeiShell\muzei.ps1
+}
+
+#This finds where we are
 $scriptLocation = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath('.\')
 
-#The API call
-$response = Invoke-RestMethod "https://muzei.co/featured" -Method GET
+#The API call. If it fails, we abort.
+try {
+    $response = Invoke-RestMethod "https://muzei.co/featured" -Method GET
+}
+catch {
+    Write-Host "Failed to fetch the image. Please check your internet connection or the API endpoint."
+    exit 1
+}
 
 #creates the archive folder if it doesn't already exists
 if (!(Test-Path $scriptLocation\Archive)) {
@@ -13,6 +36,14 @@ if (!(Test-Path $scriptLocation\Archive)) {
 if (!(Test-Path $scriptLocation\db.json)) {
     $init = "{}"
     $init > $scriptLocation\db.json
+}
+
+#creates the autoupdate task if it doesn't already exists. I wouldn't do this normalyy, this is meant to help new users.
+if (!(Get-ScheduledTask -TaskName "Muzei")) {
+    $action = New-ScheduledTaskAction -Execute "$scriptLocation\muzei.ps1"
+    $trigger = New-ScheduledTaskTrigger -Daily -At '9:00 AM'
+    $settings = New-ScheduledTaskSettingsSet -RunOnlyIfNetworkAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 3) -StartWhenAvailable
+    Register-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -TaskName "Muzei" -Description "Set your Wallpaper to the new Muzei painting."
 }
 
 #The image fetched, that we save as featured.jpg. The file is saved inside the script folder
